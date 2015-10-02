@@ -126,7 +126,10 @@ class Api
 		if(!$this->permissions) {
 			$api = new User($this->email, $this->auth_key);
 			$user = $api->user();
-			$this->permissions = $user->result->organizations[0]->permissions;
+
+			if(isset($user->result->organizations)){
+				$this->permissions = $user->result->organizations[0]->permissions;
+			}
 		}
 		return $this->permissions;
 	}
@@ -149,10 +152,15 @@ class Api
 		}
 
 		if( !is_null($this->permission_level[$permission_level]) ) {
-			if( !$this->permissions ) { $this->_permissions(); }
-			if( !isset($this->permissions) || !in_array($this->permission_level[$permission_level], $this->permissions) ) {
-				throw new Exception('You do not have permission to perform this request');
-				return false;
+			if( !$this->permissions ) {
+				$this->_permissions();
+			}
+
+			if(!is_null($this->permissions)){
+				if( !isset($this->permissions) || !in_array($this->permission_level[$permission_level], $this->permissions) ) {
+					throw new Exception('You do not have permission to perform this request');
+					return false;
+				}
 			}
 		}
 
@@ -168,7 +176,7 @@ class Api
 			CURLOPT_FORBID_REUSE   => true,
 			CURLOPT_RETURNTRANSFER => 1,
 			CURLOPT_HEADER         => false,
-			CURLOPT_TIMEOUT        => 5,
+			CURLOPT_TIMEOUT        => 30,
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_FOLLOWLOCATION => true
 		);
